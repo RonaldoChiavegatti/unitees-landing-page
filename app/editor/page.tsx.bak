@@ -1,0 +1,2550 @@
+"use client"
+
+import React, { useState, useRef, useEffect } from "react"
+import { cookies } from "next/headers"
+import Link from "next/link"
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  ImageIcon, 
+  Move, 
+  ZoomIn, 
+  RefreshCw, 
+  Download, 
+  RotateCw, 
+  TextIcon, 
+  LayoutGrid, 
+  PanelLeft, 
+  PanelRight,
+  ChevronDown,
+  Plus,
+  Trash2,
+  Copy,
+  Layers,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Upload,
+  Info as InfoIcon,
+  Minus,
+  Maximize2
+} from "lucide-react"
+import html2canvas from 'html2canvas'
+
+import { redirect } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Toaster } from "@/components/ui/toaster"
+import { useToast } from "@/components/ui/use-toast"
+import Footer from "@/components/footer"
+import Header from "@/components/header"
+
+// Funções simuladas para o produto
+const generateRandomOrderNumber = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
+const getEstimatedDeliveryDate = () => {
+  const today = new Date()
+  const deliveryDate = new Date(today)
+  deliveryDate.setDate(today.getDate() + 7) // 7 dias após hoje
+  
+  return deliveryDate.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  })
+}
+
+// Array de fontes disponíveis
+const availableFonts = [
+  { name: "Arial", value: "Arial, sans-serif" },
+  { name: "Times New Roman", value: "Times New Roman, serif" },
+  { name: "Verdana", value: "Verdana, sans-serif" },
+  { name: "Georgia", value: "Georgia, serif" },
+  { name: "Courier New", value: "Courier New, monospace" },
+  { name: "Impact", value: "Impact, sans-serif" },
+  { name: "Comic Sans MS", value: "Comic Sans MS, cursive" },
+]
+
+// Cores disponíveis para as camisetas
+const availableColors = [
+  { name: "Branco", value: "#ffffff", textColor: "#000000" },
+  { name: "Preto", value: "#000000", textColor: "#ffffff" },
+  { name: "Cinza", value: "#888888", textColor: "#ffffff" },
+  { name: "Azul", value: "#3b82f6", textColor: "#ffffff" },
+  { name: "Vermelho", value: "#ef4444", textColor: "#ffffff" },
+  { name: "Verde", value: "#22c55e", textColor: "#ffffff" },
+  { name: "Amarelo", value: "#eab308", textColor: "#000000" },
+  { name: "Roxo", value: "#8b5cf6", textColor: "#ffffff" },
+]
+
+// Array de mockups disponíveis
+const availableMockups = [
+  {
+    id: "men-basic",
+    name: "Camiseta Masculina Básica",
+    category: "masculino",
+    path: "/images/mockups/men-s-t-shirt-different-views-mockup/men_s_t_shirt_in_different_views_mockup.jpg",
+    epsPath: "/images/mockups/men-s-t-shirt-different-views-mockup/men_s_t_shirt_in_different_views_mockup.eps",
+    viewOptions: ["frente", "costas", "lado"],
+    designArea: {
+      frente: { x: 150, y: 180, width: 220, height: 280 },
+      costas: { x: 150, y: 180, width: 220, height: 280 },
+      lado: { x: 150, y: 180, width: 100, height: 280 }
+    }
+  },
+  {
+    id: "men-blue",
+    name: "Camiseta Masculina Azul",
+    category: "masculino",
+    path: "/images/mockups/men-s-blue-t-shirt-different-views-with-realistic-style (1)/men_s_blue_t_shirt_in_different_views_with_realistic_style.jpg",
+    epsPath: "/images/mockups/men-s-blue-t-shirt-different-views-with-realistic-style (1)/men_s_blue_t_shirt_in_different_views_with_realistic_style.eps",
+    viewOptions: ["frente", "costas", "lado"],
+    designArea: {
+      frente: { x: 150, y: 180, width: 220, height: 280 },
+      costas: { x: 150, y: 180, width: 220, height: 280 },
+      lado: { x: 150, y: 180, width: 100, height: 280 }
+    }
+  },
+  {
+    id: "men-yellow",
+    name: "Camiseta Masculina Amarela",
+    category: "masculino",
+    path: "/images/mockups/men-s-yellow-t-shirt-different-views-with-realistic-mockup/men_s_yellow_t_shirt_in_different_views_with_realistic_style.jpg",
+    epsPath: "/images/mockups/men-s-yellow-t-shirt-different-views-with-realistic-mockup/men_s_yellow_t_shirt_in_different_views_with_realistic_style.eps",
+    viewOptions: ["frente", "costas", "lado"],
+    designArea: {
+      frente: { x: 150, y: 180, width: 220, height: 280 },
+      costas: { x: 150, y: 180, width: 220, height: 280 },
+      lado: { x: 150, y: 180, width: 100, height: 280 }
+    }
+  },
+  {
+    id: "women-white",
+    name: "Camiseta Feminina Branca",
+    category: "feminino",
+    path: "/images/mockups/female-white-t-shirt-different-view-collection/female_white_t_shirt_in_different_view_collection.jpg",
+    epsPath: "/images/mockups/female-white-t-shirt-different-view-collection/female_white_t_shirt_in_different_view_collection.eps",
+    viewOptions: ["frente", "costas", "lado"],
+    designArea: {
+      frente: { x: 150, y: 180, width: 200, height: 250 },
+      costas: { x: 150, y: 180, width: 200, height: 250 },
+      lado: { x: 150, y: 180, width: 100, height: 250 }
+    }
+  },
+  {
+    id: "women-red",
+    name: "Camiseta Feminina Vermelha",
+    category: "feminino",
+    path: "/images/mockups/women-s-red-t-shirt-different-views-with-realistic-style/women_s_red_t_shirt_in_different_views_with_realistic_style.jpg",
+    epsPath: "/images/mockups/women-s-red-t-shirt-different-views-with-realistic-style/women_s_red_t_shirt_in_different_views_with_realistic_style.eps",
+    viewOptions: ["frente", "costas", "lado"],
+    designArea: {
+      frente: { x: 150, y: 180, width: 200, height: 250 },
+      costas: { x: 150, y: 180, width: 200, height: 250 },
+      lado: { x: 150, y: 180, width: 100, height: 250 }
+    }
+  },
+  {
+    id: "tshirt-grey",
+    name: "Camiseta Cinza Básica",
+    category: "unissex",
+    path: "/images/mockups/short-sleeves-grey-t-shirt-mockup/short_sleeves_grey_t_shirt_mockup.jpg",
+    epsPath: "/images/mockups/short-sleeves-grey-t-shirt-mockup/short_sleeves_grey_t_shirt_mockup.eps",
+    viewOptions: ["frente"],
+    designArea: {
+      frente: { x: 150, y: 180, width: 220, height: 280 }
+    }
+  },
+  {
+    id: "tshirt-blackwhite",
+    name: "Camiseta Preta e Branca",
+    category: "unissex",
+    path: "/images/mockups/t-shirt-mockup-black-white-male-t-shirt-with-short-sleeves-wooden-hangers-template-front-view/3021.jpg",
+    epsPath: "/images/mockups/t-shirt-mockup-black-white-male-t-shirt-with-short-sleeves-wooden-hangers-template-front-view/3021.eps",
+    viewOptions: ["frente"],
+    designArea: {
+      frente: { x: 150, y: 180, width: 220, height: 280 }
+    }
+  },
+];
+
+// Componente que faz o carregamento de imagem com fallback
+interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+  src: string;
+  alt: string;
+  className?: string;
+}
+
+const SafeImage = ({ src, alt, className = "", ...props }: SafeImageProps) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  
+  return (
+    <div className={`relative ${className}`}>
+      {!loaded && !error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-100 animate-pulse">
+          <ImageIcon className="w-8 h-8 text-slate-400" />
+        </div>
+      )}
+      
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+          <div className="text-center">
+            <ImageIcon className="w-8 h-8 text-red-400 mx-auto mb-2" />
+            <p className="text-xs text-slate-500">Erro ao carregar imagem</p>
+          </div>
+        </div>
+      )}
+      
+      <img
+        src={src}
+        alt={alt}
+        className={`transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'} ${error ? 'hidden' : ''}`}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          setError(true);
+          console.error(`Erro ao carregar imagem: ${src}`);
+        }}
+        {...props}
+      />
+    </div>
+  );
+};
+
+// Componente que renderiza SVG com alta qualidade
+interface SVGRendererProps {
+  src: string;
+  width: number;
+  height: number;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+const SVGRenderer = ({ src, width, height, className = "", style = {} }: SVGRendererProps) => {
+  const [svgContent, setSvgContent] = useState<string | null>(null);
+  const [error, setError] = useState<boolean>(false);
+  const [loaded, setLoaded] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Se a fonte é uma data URL SVG, extraímos o conteúdo
+    if (src.startsWith('data:image/svg+xml;base64,')) {
+      try {
+        const base64Content = src.replace('data:image/svg+xml;base64,', '');
+        const decodedContent = atob(base64Content);
+        setSvgContent(decodedContent);
+        setLoaded(true);
+      } catch (err) {
+        console.error('Erro ao decodificar SVG:', err);
+        setError(true);
+      }
+    } else if (src.startsWith('data:image/svg+xml,')) {
+      try {
+        const content = decodeURIComponent(src.replace('data:image/svg+xml,', ''));
+        setSvgContent(content);
+        setLoaded(true);
+      } catch (err) {
+        console.error('Erro ao decodificar SVG:', err);
+        setError(true);
+      }
+    } else {
+      // Se for uma URL externa, fazemos fetch
+      fetch(src)
+        .then(response => response.text())
+        .then(data => {
+          setSvgContent(data);
+          setLoaded(true);
+        })
+        .catch(err => {
+          console.error('Erro ao carregar SVG:', err);
+          setError(true);
+        });
+    }
+  }, [src]);
+
+  if (error) {
+    return (
+      <div 
+        className={`flex items-center justify-center bg-red-50 ${className}`} 
+        style={{ width: `${width}px`, height: `${height}px`, ...style }}
+      >
+        <ImageIcon className="h-8 w-8 text-red-400" />
+      </div>
+    );
+  }
+
+  if (!loaded || !svgContent) {
+    return (
+      <div 
+        className={`flex items-center justify-center bg-slate-100 animate-pulse ${className}`} 
+        style={{ width: `${width}px`, height: `${height}px`, ...style }}
+      >
+        <ImageIcon className="h-8 w-8 text-slate-400" />
+      </div>
+    );
+  }
+
+  // Sanitizamos o SVG para evitar vulnerabilidades XSS
+  const sanitizedSvg = svgContent
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove tags de script
+    .replace(/on\w+="[^"]*"/g, '') // Remove manipuladores de eventos
+    .replace(/on\w+='[^']*'/g, '');
+
+  // Ajustamos o SVG para ter o tamanho correto
+  const modifiedSvg = sanitizedSvg
+    .replace(/<svg/, `<svg width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet"`);
+    
+  return (
+    <div 
+      className={className}
+      style={{ width: `${width}px`, height: `${height}px`, ...style }}
+      dangerouslySetInnerHTML={{ __html: modifiedSvg }}
+    />
+  );
+};
+
+// Função para converter texto em SVG (mantém a qualidade em alta resolução)
+const textToSVG = (text: string, options: {
+  fontSize: number;
+  fontFamily: string;
+  fontColor: string;
+  fontWeight: string;
+  fontStyle: string;
+  textDecoration: string;
+  textAlign: string;
+  width?: number;
+  height?: number;
+}) => {
+  const {
+    fontSize,
+    fontFamily,
+    fontColor,
+    fontWeight,
+    fontStyle,
+    textDecoration,
+    textAlign,
+    width = fontSize * text.length,
+    height = fontSize * 1.5
+  } = options;
+  
+  // Escapamos o texto para evitar problemas com XML
+  const escapedText = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+  
+  // Calculamos a posição do texto baseado no alinhamento
+  let x = '50%';
+  let anchor = 'middle';
+  
+  if (textAlign === 'left') {
+    x = '0';
+    anchor = 'start';
+  } else if (textAlign === 'right') {
+    x = '100%';
+    anchor = 'end';
+  }
+  
+  // Estilização de decoração de texto
+  const decorations = [];
+  if (textDecoration === 'underline') {
+    decorations.push(`text-decoration="underline"`);
+  }
+  
+  // Criamos o SVG
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <text 
+        x="${x}" 
+        y="${height / 2}" 
+        font-family="${fontFamily}"
+        font-size="${fontSize}px"
+        fill="${fontColor}"
+        font-weight="${fontWeight}"
+        font-style="${fontStyle}"
+        text-anchor="${anchor}"
+        dominant-baseline="middle"
+        ${decorations.join(' ')}
+      >
+        ${escapedText}
+      </text>
+    </svg>
+  `;
+  
+  // Convertemos para data URL
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+};
+
+export default function EditorPage() {
+  // Constantes para sensibilidade de zoom e pan
+  const ZOOM_SENSITIVITY = 0.06; // Reduzido para melhor controle no touchpad
+  const PAN_SENSITIVITY = 1.2; // Ajustado para touchpad
+  const DOUBLE_TAP_DELAY = 300; // Tempo máximo entre toques para considerar double-tap
+  
+  // Estado do elemento selecionado
+  const [selectedElement, setSelectedElement] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  
+  // Estado para resizing
+  const [isResizing, setIsResizing] = useState(false)
+  const [resizeStart, setResizeStart] = useState({ width: 0, height: 0, x: 0, y: 0 })
+  
+  // Estado para os controles de texto
+  const [text, setText] = useState("Seu texto aqui")
+  const [fontSize, setFontSize] = useState(24)
+  const [fontFamily, setFontFamily] = useState("Arial, sans-serif")
+  const [fontColor, setFontColor] = useState("#000000")
+  const [align, setAlign] = useState<"left" | "center" | "right">("center")
+  const [isBold, setIsBold] = useState(false)
+  const [isItalic, setIsItalic] = useState(false)
+  const [isUnderline, setIsUnderline] = useState(false)
+  
+  // Estado para a cor do produto
+  const [productColor, setProductColor] = useState(availableColors[0])
+  
+  // Estado para mockups
+  const [selectedMockup, setSelectedMockup] = useState(availableMockups[0])
+  const [currentView, setCurrentView] = useState("frente")
+  const [showMockupSelector, setShowMockupSelector] = useState(false)
+  
+  // Estado para UI
+  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false)
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false)
+  const [activeTab, setActiveTab] = useState("texto")
+  
+  // Estado para o nível de zoom
+  const [zoom, setZoom] = useState(100)
+  const [zoomCenter, setZoomCenter] = useState({ x: 0, y: 0 })
+  const canvasRef = useRef<HTMLDivElement>(null)
+  const zoomControlsRef = useRef<HTMLDivElement>(null)
+  
+  // Estado para o arrastar (pan) do canvas
+  const [isPanning, setPanning] = useState(false)
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 })
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 })
+  
+  // Lista de níveis de zoom predefinidos para uma experiência melhor
+  const zoomLevels = [25, 50, 75, 100, 125, 150, 200, 300, 400]
+  
+  // Estado para carregamento
+  const [isSaving, setIsSaving] = useState(false)
+  
+  // Estado para histórico (Undo/Redo)
+  const [history, setHistory] = useState<Array<Array<typeof canvasElements[0]>>>([])
+  const [historyIndex, setHistoryIndex] = useState(-1)
+  
+  // Elementos no canvas
+  const [canvasElements, setCanvasElements] = useState<Array<{
+    id: string;
+    type: "text" | "image";
+    content: string;
+    x: number;
+    y: number;
+    rotation?: number;
+    fontSize?: number;
+    fontFamily?: string;
+    fontColor?: string;
+    align?: "left" | "center" | "right";
+    isBold?: boolean;
+    isItalic?: boolean;
+    isUnderline?: boolean;
+    width?: number;
+    height?: number;
+    zIndex?: number;
+    isSVG?: boolean;
+    isTextSVG?: boolean;
+    originalText?: string;
+    textOptions?: any;
+  }>>([])
+  
+  const { toast } = useToast()
+  
+  // Função para adicionar ao histórico
+  const addToHistory = (elements: typeof canvasElements) => {
+    const newHistory = [...history.slice(0, historyIndex + 1), [...elements]];
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+  
+  // Funções para desfazer/refazer
+  const undo = () => {
+    if (historyIndex > 0) {
+      setHistoryIndex(historyIndex - 1);
+      setCanvasElements([...history[historyIndex - 1]]);
+    }
+  };
+  
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(historyIndex + 1);
+      setCanvasElements([...history[historyIndex + 1]]);
+    }
+  };
+  
+  // Atualiza o histórico quando os elementos do canvas mudam
+  useEffect(() => {
+    if (canvasElements.length > 0) {
+      addToHistory(canvasElements);
+    }
+  }, []);
+  
+  // Adicionar texto ao canvas
+  const addTextToCanvas = () => {
+    // Construímos as opções do SVG baseadas nas configurações de texto
+    const svgOptions = {
+      fontSize,
+      fontFamily,
+      fontColor,
+      fontWeight: isBold ? 'bold' : 'normal',
+      fontStyle: isItalic ? 'italic' : 'normal',
+      textDecoration: isUnderline ? 'underline' : 'none',
+      textAlign: align,
+      width: fontSize * text.length * 0.8, // Estimativa aproximada da largura
+      height: fontSize * 1.5 // Altura padrão para texto
+    };
+    
+    // Geramos o SVG
+    const svgData = textToSVG(text, svgOptions);
+    
+    // Criamos o elemento no canvas
+    const newElement = {
+      id: `text-${Date.now()}`,
+      type: "image" as const, // Usamos imagem para SVG
+      content: svgData,
+      x: 150,
+      y: 200,
+      rotation: 0,
+      width: svgOptions.width,
+      height: svgOptions.height,
+      isSVG: true,
+      isTextSVG: true, // Marcador para identificar este elemento como texto convertido para SVG
+      originalText: text, // Guardar o texto original para edição futura
+      textOptions: svgOptions // Guardar as opções para edição futura
+    };
+    
+    setCanvasElements([...canvasElements, newElement]);
+    setSelectedElement(newElement.id);
+    
+    toast({
+      title: "Texto adicionado",
+      description: "O texto foi adicionado como vetor para qualidade máxima"
+    });
+  };
+  
+  // Função melhorada para lidar com upload de imagens, incluindo SVG
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement> | null) => {
+    if (!e || !e.target.files || e.target.files.length === 0) {
+      toast({
+        title: "Selecione um arquivo",
+        description: "Por favor, selecione uma imagem para upload"
+      });
+      return;
+    }
+    
+    const file = e.target.files[0];
+    
+    // Verifica se é uma imagem ou SVG
+    if (!file.type.startsWith('image/') && file.type !== 'image/svg+xml') {
+    toast({
+        title: "Formato inválido",
+        description: "Por favor, selecione apenas arquivos de imagem ou SVG"
+      });
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result;
+      if (result) {
+        // Verificar se é um SVG para tratamento especial
+        const isSVG = file.type === 'image/svg+xml';
+        
+        // Criar uma imagem para obter dimensões (mesmo para SVG)
+        const img = new Image();
+        img.onload = () => {
+          // Calcular dimensões máximas mantendo proporção
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 200;
+          
+          if (width > height && width > maxDim) {
+            height = (height / width) * maxDim;
+            width = maxDim;
+          } else if (height > width && height > maxDim) {
+            width = (width / height) * maxDim;
+            height = maxDim;
+          } else if (width > maxDim && height > maxDim) {
+            width = maxDim;
+            height = maxDim;
+          }
+          
+          // Criar o elemento da imagem
+          const newElement = {
+            id: `image-${Date.now()}`,
+            type: "image" as const,
+            content: result as string,
+            x: 150,
+            y: 200,
+            rotation: 0,
+            width: Math.round(width),
+            height: Math.round(height),
+            isSVG: isSVG
+          };
+          
+          setCanvasElements([...canvasElements, newElement]);
+          setSelectedElement(newElement.id);
+          
+          toast({
+            title: isSVG ? "Imagem vetorial adicionada" : "Imagem adicionada",
+            description: `A ${isSVG ? "imagem vetorial" : "imagem"} foi adicionada ao seu design`
+          });
+        };
+        img.src = result as string;
+      }
+    };
+    
+    // Usar readAsDataURL para todos os tipos, incluindo SVG
+    reader.readAsDataURL(file);
+  };
+  
+  // Referência para o input de arquivo
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Manipuladores de arrastar e soltar no canvas
+  const handleCanvasMouseDown = (e: React.MouseEvent, elementId: string) => {
+    setSelectedElement(elementId)
+    setIsDragging(true)
+    setDragStart({
+      x: e.clientX,
+      y: e.clientY
+    })
+  }
+  
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !selectedElement) return
+    
+    const deltaX = e.clientX - dragStart.x
+    const deltaY = e.clientY - dragStart.y
+    
+    setCanvasElements(canvasElements.map(el => {
+      if (el.id === selectedElement) {
+        return {
+          ...el,
+          x: el.x + deltaX,
+          y: el.y + deltaY
+        }
+      }
+      return el
+    }))
+    
+    setDragStart({
+      x: e.clientX,
+      y: e.clientY
+    })
+  }
+  
+  const handleCanvasMouseUp = () => {
+    setIsDragging(false)
+  }
+  
+  // Remover elemento selecionado
+  const deleteSelectedElement = () => {
+    if (!selectedElement) return
+    
+    setCanvasElements(canvasElements.filter(el => el.id !== selectedElement))
+    setSelectedElement(null)
+    
+    toast({
+      title: "Elemento removido",
+      description: "O elemento foi removido do design",
+    })
+  }
+  
+  // Atualizar propriedades do elemento selecionado, com suporte para texto SVG
+  const updateSelectedElement = (updates: Partial<typeof canvasElements[0]>) => {
+    setCanvasElements(canvasElements.map(el => {
+      if (el.id === selectedElement) {
+        const updatedElement = {
+          ...el,
+          ...updates
+        };
+        
+        // Se for um texto SVG e as propriedades de texto foram alteradas, regeneramos o SVG
+        if (el.isTextSVG && (
+          updates.fontColor || 
+          updates.fontSize || 
+          updates.fontFamily || 
+          updates.isBold || 
+          updates.isItalic || 
+          updates.isUnderline || 
+          updates.align
+        )) {
+          const originalText = el.originalText || "";
+          const currentOptions = el.textOptions || {};
+          
+          // Atualizamos as opções com as novas propriedades
+          const newOptions = {
+            ...currentOptions,
+            fontSize: updates.fontSize || currentOptions.fontSize,
+            fontFamily: updates.fontFamily || currentOptions.fontFamily,
+            fontColor: updates.fontColor || currentOptions.fontColor,
+            fontWeight: (updates.isBold !== undefined ? updates.isBold : currentOptions.fontWeight === 'bold') ? 'bold' : 'normal',
+            fontStyle: (updates.isItalic !== undefined ? updates.isItalic : currentOptions.fontStyle === 'italic') ? 'italic' : 'normal',
+            textDecoration: (updates.isUnderline !== undefined ? updates.isUnderline : currentOptions.textDecoration === 'underline') ? 'underline' : 'none',
+            textAlign: updates.align || currentOptions.textAlign,
+            width: (updates.fontSize || currentOptions.fontSize) * originalText.length * 0.8, // Recalcular largura
+            height: (updates.fontSize || currentOptions.fontSize) * 1.5 // Recalcular altura
+          };
+          
+          // Regenerar SVG com as novas opções
+          const newSvgData = textToSVG(originalText, newOptions);
+          
+          return {
+            ...updatedElement,
+            content: newSvgData,
+            width: newOptions.width,
+            height: newOptions.height,
+            textOptions: newOptions
+          };
+        }
+        
+        return updatedElement;
+      }
+      return el;
+    }));
+  };
+  
+  // Manipuladores para rotação de elementos
+  const handleRotate = (elementId: string) => {
+    setCanvasElements(canvasElements.map(el => {
+      if (el.id === elementId) {
+        const currentRotation = el.rotation || 0;
+        return {
+          ...el,
+          rotation: (currentRotation + 15) % 360
+        };
+      }
+      return el;
+    }));
+  };
+  
+  // Função melhorada para exportar o design, garantindo alta qualidade
+  const saveDesign = async () => {
+    try {
+      setIsSaving(true);
+      const designArea = document.getElementById("design-canvas-area");
+      
+      if (!designArea) {
+        throw new Error("Área de design não encontrada");
+      }
+      
+      toast({
+        title: "Processando...",
+        description: "Gerando imagem do seu design"
+      });
+      
+      // Usar html2canvas com configurações otimizadas para melhor qualidade
+      const canvas = await html2canvas(designArea, {
+        backgroundColor: null,
+        scale: 4, // Aumentamos a escala para maior qualidade
+        logging: false,
+        allowTaint: true,
+        useCORS: true,
+        imageTimeout: 0, // Previne timeout em imagens grandes
+        onclone: (clonedDoc) => {
+          // Preparar elementos SVG no clone para melhor renderização
+          const clonedElements = clonedDoc.querySelectorAll('[data-svg="true"]');
+          clonedElements.forEach(element => {
+            const img = element as HTMLImageElement;
+            // Assegurar que o SVG mantenha sua qualidade
+            if (img.src.startsWith('data:image/svg+xml')) {
+              img.style.imageRendering = 'auto';
+            }
+          });
+        }
+      });
+      
+      // Configuração para máxima qualidade no contexto do canvas
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+      }
+      
+      // Oferecer opção de formato ao usuário
+      const formatOptions = [
+        { id: 'png', name: 'PNG (melhor qualidade)', mime: 'image/png', quality: 1.0 },
+        { id: 'jpg', name: 'JPEG (menor tamanho)', mime: 'image/jpeg', quality: 0.92 }
+      ];
+      
+      // Por padrão, usamos PNG para melhor qualidade
+      const format = formatOptions[0];
+      
+      // Converter para uma imagem e fazer download
+      const dataURL = canvas.toDataURL(format.mime, format.quality);
+      const link = document.createElement("a");
+      link.download = `unitees-design-${Date.now()}.${format.id}`;
+      link.href = dataURL;
+      link.click();
+      
+    toast({
+      title: "Design salvo!",
+        description: "Seu design foi salvo como imagem de alta qualidade"
+      });
+      
+      // Informar ao usuário sobre a disponibilidade de arquivo EPS
+      setTimeout(() => {
+        if (selectedMockup && selectedMockup.epsPath) {
+          toast({
+            title: "Arquivos Vetoriais Disponíveis",
+            description: "Este mockup possui versão vetorial (EPS) para produção em gráfica.",
+          });
+        }
+      }, 1500);
+    } catch (error) {
+      console.error("Erro ao salvar design:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar o design como imagem"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  // Adicionar ao carrinho (simulado)
+  const addToCart = () => {
+    toast({
+      title: "Produto adicionado ao carrinho",
+      description: "Redirecionando para o carrinho...",
+    })
+    
+    // Simular redirecionamento após um delay
+    setTimeout(() => {
+      window.location.href = "/cart"
+    }, 1500)
+  }
+  
+  // Verificar se o usuário está autenticado (simulado)
+  const isAuthenticated = true
+  
+  if (!isAuthenticated) {
+    return redirect("/login")
+  }
+  
+  // Salvar design em um arquivo JSON
+  const saveDesignToJSON = () => {
+    const designData = {
+      mockup: selectedMockup.id,
+      color: productColor,
+      view: currentView,
+      elements: canvasElements
+    };
+
+    const blob = new Blob([JSON.stringify(designData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `unitees-design-${generateRandomOrderNumber()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Design salvo!",
+      description: "Seu design foi salvo com sucesso"
+    });
+  };
+  
+  // Manipuladores para redimensionar imagens
+  const handleResizeStart = (e: React.MouseEvent, elementId: string) => {
+    e.stopPropagation();
+    const element = canvasElements.find(el => el.id === elementId);
+    
+    if (element && element.type === "image") {
+      setIsResizing(true);
+      setSelectedElement(elementId);
+      setResizeStart({
+        width: element.width || 100,
+        height: element.height || 100,
+        x: e.clientX,
+        y: e.clientY
+      });
+    }
+  };
+  
+  const handleResizeMove = (e: React.MouseEvent) => {
+    if (!isResizing || !selectedElement) return;
+    
+    const deltaX = e.clientX - resizeStart.x;
+    const deltaY = e.clientY - resizeStart.y;
+    
+    const element = canvasElements.find(el => el.id === selectedElement);
+    
+    if (element && element.type === "image") {
+      // Manter a proporção da imagem original
+      const aspectRatio = resizeStart.width / resizeStart.height;
+      
+      // Calcular as novas dimensões baseado na maior mudança (x ou y)
+      let newWidth, newHeight;
+      
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        newWidth = Math.max(30, resizeStart.width + deltaX);
+        newHeight = newWidth / aspectRatio;
+      } else {
+        newHeight = Math.max(30, resizeStart.height + deltaY);
+        newWidth = newHeight * aspectRatio;
+      }
+      
+      setCanvasElements(canvasElements.map(el => {
+        if (el.id === selectedElement) {
+          return {
+            ...el,
+            width: Math.round(newWidth),
+            height: Math.round(newHeight)
+          };
+        }
+        return el;
+      }));
+    }
+  };
+  
+  const handleResizeEnd = () => {
+    setIsResizing(false);
+  };
+  
+  // Função para lidar com informações sobre arquivos EPS
+  const handleEpsSupport = () => {
+    toast({
+      title: "Arquivos Vetoriais (EPS)",
+      description: "Arquivos EPS estão disponíveis para uso profissional na impressão final. Estes arquivos vetoriais garantem máxima qualidade em qualquer tamanho de impressão.",
+      duration: 6000
+    });
+  };
+  
+  // Dentro do componente, adicione a referência para o input de importação
+  const importInputRef = useRef<HTMLInputElement>(null);
+  
+  // Importar design de um arquivo JSON
+  const importDesignFromJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      try {
+        const result = e.target?.result;
+        if (!result || typeof result !== 'string') {
+          toast({
+            title: "Erro na leitura",
+            description: "Não foi possível ler o conteúdo do arquivo"
+          });
+          return;
+        }
+        
+        const jsonData = JSON.parse(result);
+        
+        // Verificar se o JSON tem a estrutura esperada
+        if (!jsonData.mockup || !jsonData.elements) {
+          throw new Error("Formato de arquivo inválido");
+        }
+        
+        // Atualizar o estado com os dados importados
+        const mockup = availableMockups.find(m => m.id === jsonData.mockup);
+        if (mockup) {
+          setSelectedMockup(mockup);
+          if (jsonData.color) setProductColor(jsonData.color);
+          if (jsonData.view) setCurrentView(jsonData.view);
+          setCanvasElements(jsonData.elements);
+          
+          toast({
+            title: "Design importado!",
+            description: "Seu design foi importado com sucesso"
+          });
+        } else {
+          throw new Error("Mockup não encontrado");
+        }
+      } catch (error) {
+        console.error("Erro ao importar design:", error);
+        toast({
+          title: "Erro na importação",
+          description: "Não foi possível importar o design. Formato inválido."
+        });
+      }
+      
+      // Reset do input para permitir reupload do mesmo arquivo
+      event.target.value = '';
+    };
+    
+    reader.onerror = () => {
+      toast({
+        title: "Erro na leitura",
+        description: "Não foi possível ler o arquivo"
+      });
+    };
+    
+    reader.readAsText(file);
+  };
+  
+  // Adicionar estado para controle de gestos
+  const [lastPinchDistance, setLastPinchDistance] = useState<number | null>(null);
+  const [touchStartTime, setTouchStartTime] = useState<number>(0);
+  const [doubleTapTimer, setDoubleTapTimer] = useState<NodeJS.Timeout | null>(null);
+
+  // Função para lidar com zoom através de pinça (pinch) no touchpad
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Para cálculo de double-tap
+    const now = Date.now();
+    
+    // Se é um segundo toque dentro do tempo de double-tap
+    if (now - touchStartTime < DOUBLE_TAP_DELAY) {
+      // Double-tap detectado, reset para zoom 100%
+      resetCanvasPosition();
+      clearTimeout(doubleTapTimer as NodeJS.Timeout);
+      setDoubleTapTimer(null);
+    } else {
+      // Configurar timer para possível double-tap
+      if (doubleTapTimer) clearTimeout(doubleTapTimer);
+      setDoubleTapTimer(setTimeout(() => setDoubleTapTimer(null), DOUBLE_TAP_DELAY));
+    }
+    
+    setTouchStartTime(now);
+    
+    if (e.touches.length === 2) {
+      // Calcular distância inicial entre os dois dedos
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      setLastPinchDistance(distance);
+      
+      // Definir o centro do pinch como centro do zoom
+      const centerX = (touch1.clientX + touch2.clientX) / 2;
+      const centerY = (touch1.clientY + touch2.clientY) / 2;
+      
+      if (canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const x = (centerX - rect.left) / rect.width;
+        const y = (centerY - rect.top) / rect.height;
+        setZoomCenter({ x, y });
+      }
+      
+      // Garantir que o comportamento padrão do navegador seja prevenido
+      e.preventDefault();
+      e.stopPropagation();
+    } else if (e.touches.length === 1) {
+      // Para pan com um dedo
+      handleCanvasPanStart(e);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // Gestos de pinça para zoom (dois dedos)
+    if (e.touches.length === 2 && lastPinchDistance !== null) {
+      // Prevenir comportamento padrão para evitar interações indesejadas
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      // Calcular fator de zoom baseado na mudança de distância
+      const delta = distance - lastPinchDistance;
+      // Ajuste de sensibilidade para touchpads
+      const scaleFactor = delta * ZOOM_SENSITIVITY * 0.8;
+      const newZoom = Math.max(25, Math.min(400, zoom * (1 + scaleFactor)));
+      
+      setZoom(newZoom);
+      setLastPinchDistance(distance);
+      
+      // Atualizar centro do zoom
+      const centerX = (touch1.clientX + touch2.clientX) / 2;
+      const centerY = (touch1.clientY + touch2.clientY) / 2;
+      
+      if (canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const x = (centerX - rect.left) / rect.width;
+        const y = (centerY - rect.top) / rect.height;
+        setZoomCenter({ x, y });
+      }
+    } else if (e.touches.length === 1) {
+      // Pan com um dedo
+      handleCanvasPanMove(e);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    // Finalizar gestos
+    if (e.touches.length < 2) {
+      setLastPinchDistance(null);
+    }
+    
+    // Finalizar pan
+    if (e.touches.length === 0) {
+      handleCanvasPanEnd();
+    }
+  };
+
+  // Adicionar atalhos de teclado para navegação
+  useEffect(() => {
+    const keyDownHandler = (e: KeyboardEvent) => {
+      // Ignorar eventos de tecla quando estiver em um campo de entrada
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+    
+      // Atalhos de zoom e navegação
+      if (e.ctrlKey) {
+        if (e.key === '0') {
+          e.preventDefault();
+          setPanPosition({ x: 0, y: 0 });
+          setZoomCenter({ x: 0.5, y: 0.5 });
+          setZoom(100);
+        } else if (e.key === '=' || e.key === '+') {
+          e.preventDefault();
+          const nextLevel = zoomLevels.find(level => level > zoom) || zoom;
+          setZoomCenter({ x: 0.5, y: 0.5 });
+          setZoom(nextLevel);
+        } else if (e.key === '-') {
+          e.preventDefault();
+          const reversedLevels = [...zoomLevels].reverse();
+          const prevLevel = reversedLevels.find(level => level < zoom) || zoom;
+          setZoomCenter({ x: 0.5, y: 0.5 });
+          setZoom(prevLevel);
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          setPanPosition({
+            x: panPosition.x + 20,
+            y: panPosition.y
+          });
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          setPanPosition({
+            x: panPosition.x - 20,
+            y: panPosition.y
+          });
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', keyDownHandler);
+    return () => window.removeEventListener('keydown', keyDownHandler);
+  }, [zoom, panPosition, zoomLevels]);
+
+  // Melhorar o tratamento de eventos de roda do mouse/touchpad
+  const handleZoomWheel = (e: React.WheelEvent) => {
+    // Sempre prevenir o comportamento padrão do navegador quando o cursor
+    // estiver sobre o canvas, para evitar que o zoom do navegador seja acionado
+    e.preventDefault();
+    
+    // Verificar se é um gesto de pinça no touchpad (ctrl+wheel) ou scroll normal
+    const isPinchGesture = e.ctrlKey;
+    
+    if (isPinchGesture) {
+      // Para gestos de pinça, usamos uma sensibilidade ajustada
+      const factor = ZOOM_SENSITIVITY * 0.5;
+      const direction = e.deltaY < 0 ? 1 : -1;
+      const newZoom = Math.max(25, Math.min(400, zoom * (1 + direction * factor)));
+      
+      // Centralizar o zoom no ponto atual do cursor para uma melhor experiência
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (rect) {
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+        setZoomCenter({ x, y });
+      }
+      
+      setZoom(newZoom);
+    } else {
+      // Para scroll normal, usamos para pan vertical
+      if (zoom > 100) {
+        // Só aplicamos pan quando temos zoom acima de 100%
+        setPanPosition({
+          x: panPosition.x,
+          y: panPosition.y - (e.deltaY / (zoom / 100)) * 0.5 // Ajuste de velocidade
+        });
+      } else if (e.shiftKey) {
+        // Shift+scroll para pan horizontal
+        setPanPosition({
+          x: panPosition.x - (e.deltaY / (zoom / 100)) * 0.5,
+          y: panPosition.y
+        });
+      }
+    }
+  };
+
+  // Função para formatar o valor do zoom para exibição
+  const formatZoomLevel = (zoom: number) => {
+    return `${Math.round(zoom)}%`
+  }
+
+  // Função para fazer zoom a um nível específico
+  const zoomTo = (level: number) => {
+    // Centralizar o zoom quando usando os botões
+    setZoomCenter({ x: 0.5, y: 0.5 })
+    setZoom(level)
+  }
+
+  // Função para resetar a posição do canvas
+  const resetCanvasPosition = () => {
+    setPanPosition({ x: 0, y: 0 })
+    setZoomCenter({ x: 0.5, y: 0.5 })
+    setZoom(100)
+  }
+
+  // Função para pular para o próximo nível predefinido de zoom
+  const zoomIn = () => {
+    const nextLevel = zoomLevels.find(level => level > zoom) || zoom
+    zoomTo(nextLevel)
+  }
+
+  // Função para pular para o nível predefinido anterior de zoom
+  const zoomOut = () => {
+    const reversedLevels = [...zoomLevels].reverse()
+    const prevLevel = reversedLevels.find(level => level < zoom) || zoom
+    zoomTo(prevLevel)
+  }
+
+  // Manipuladores para arrastar o canvas (pan)
+  const handleCanvasPanStart = (e: React.MouseEvent | React.TouchEvent) => {
+    // Só permitir pan com o botão do meio (roda) ou quando temos muito zoom
+    if (e.type === 'mousedown' && (e as React.MouseEvent).button !== 1 && zoom <= 100) {
+      return
+    }
+    
+    setPanning(true)
+    
+    // Capturar a posição inicial, seja touch ou mouse
+    if (e.type === 'touchstart') {
+      const touch = (e as React.TouchEvent).touches[0]
+      setPanStart({ x: touch.clientX, y: touch.clientY })
+    } else {
+      setPanStart({ x: (e as React.MouseEvent).clientX, y: (e as React.MouseEvent).clientY })
+    }
+  }
+
+  // Melhorar a sensibilidade do arrastar (pan) para touchpad
+  const handleCanvasPanMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isPanning) return;
+    
+    e.preventDefault();
+    let currentX: number, currentY: number;
+    
+    // Obter posição atual, seja touch ou mouse
+    if (e.type === 'touchmove') {
+      const touch = (e as React.TouchEvent).touches[0];
+      currentX = touch.clientX;
+      currentY = touch.clientY;
+    } else {
+      currentX = (e as React.MouseEvent).clientX;
+      currentY = (e as React.MouseEvent).clientY;
+    }
+    
+    // Calcular a diferença e ajustar a posição (com sensibilidade ajustada para touchpad)
+    const deltaX = (currentX - panStart.x) / (zoom / 100) * PAN_SENSITIVITY;
+    const deltaY = (currentY - panStart.y) / (zoom / 100) * PAN_SENSITIVITY;
+    
+    setPanPosition({
+      x: panPosition.x + deltaX,
+      y: panPosition.y + deltaY
+    });
+    
+    // Atualizar o ponto de início para o próximo movimento
+    setPanStart({ x: currentX, y: currentY });
+  };
+
+  const handleCanvasPanEnd = () => {
+    setPanning(false)
+  }
+
+  // Adicionar instruções de ajuda para o usuário
+  const renderZoomHelp = () => (
+    <div className="absolute bottom-20 right-4 bg-white p-3 rounded-lg shadow-lg border text-sm z-40 hidden md:block">
+      <h3 className="font-bold mb-2">Atalhos de Zoom</h3>
+      <ul className="space-y-1 text-xs">
+        <li className="flex items-center justify-between gap-4">
+          <span>Zoom in/out:</span>
+          <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">Ctrl + Roda</span>
+        </li>
+        <li className="flex items-center justify-between gap-4">
+          <span>Resetar zoom:</span>
+          <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">Ctrl + 0</span>
+        </li>
+        <li className="flex items-center justify-between gap-4">
+          <span>Pan (arrastar):</span>
+          <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">Roda do meio</span>
+        </li>
+        <li className="flex items-center justify-between gap-4">
+          <span>Touchpad:</span>
+          <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">Pinça para zoom</span>
+        </li>
+        <li className="flex items-center justify-between gap-4">
+          <span>Centralizar:</span>
+          <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">Dois toques</span>
+        </li>
+      </ul>
+    </div>
+  );
+
+  // Exportar design como SVG
+  const exportDesignAsSVG = () => {
+    try {
+      setIsSaving(true);
+      
+      toast({
+        title: "Processando...",
+        description: "Gerando SVG do seu design"
+      });
+      
+      // Obter as dimensões do canvas
+      const designArea = document.getElementById("design-canvas-area");
+      if (!designArea) {
+        throw new Error("Área de design não encontrada");
+      }
+      
+      const { width, height } = designArea.getBoundingClientRect();
+      
+      // Começar a construir o SVG
+      let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Arial&family=Times+New+Roman&family=Verdana&family=Georgia&family=Courier+New&family=Impact&family=Comic+Sans+MS&display=swap');
+        </style>
+        <rect width="100%" height="100%" fill="#ffffff" />
+      `;
+      
+      // Para o mockup, vamos incluir como uma imagem de fundo
+      svgContent += `<image href="${selectedMockup.path}" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet" />`;
+      
+      // Adicionar cada elemento do canvas
+      canvasElements.forEach(element => {
+        if (element.isTextSVG || element.isSVG) {
+          // Elementos SVG - podemos incorporá-los diretamente com ajustes
+          let elementSvgContent = '';
+          
+          if (element.isTextSVG) {
+            // Para texto SVG, podemos recriá-lo ou extrair da URL
+            const options = element.textOptions || {};
+            const text = element.originalText || '';
+            
+            elementSvgContent = `
+              <text 
+                x="0" 
+                y="0" 
+                font-family="${options.fontFamily || 'Arial, sans-serif'}"
+                font-size="${options.fontSize || 16}px"
+                fill="${options.fontColor || '#000000'}"
+                font-weight="${options.fontWeight || 'normal'}"
+                font-style="${options.fontStyle || 'normal'}"
+                text-anchor="${options.textAlign === 'left' ? 'start' : options.textAlign === 'right' ? 'end' : 'middle'}"
+                text-decoration="${options.textDecoration || 'none'}"
+                dominant-baseline="middle"
+              >
+                ${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+              </text>
+            `;
+          } else if (element.content.startsWith('data:image/svg+xml')) {
+            // Extrair o conteúdo SVG da URL
+            try {
+              let svgData = element.content;
+              
+              if (svgData.startsWith('data:image/svg+xml;base64,')) {
+                const base64Content = svgData.replace('data:image/svg+xml;base64,', '');
+                svgData = atob(base64Content);
+              } else if (svgData.startsWith('data:image/svg+xml,')) {
+                svgData = decodeURIComponent(svgData.replace('data:image/svg+xml,', ''));
+              }
+              
+              // Extrair apenas o conteúdo dentro da tag svg
+              const svgMatch = svgData.match(/<svg[^>]*>([\s\S]*?)<\/svg>/i);
+              if (svgMatch && svgMatch[1]) {
+                elementSvgContent = svgMatch[1];
+              } else {
+                // Se não conseguir extrair, use o SVG completo
+                elementSvgContent = svgData;
+              }
+            } catch (err) {
+              console.error('Erro ao processar SVG:', err);
+              // Fallback: incluir como imagem
+              elementSvgContent = `<image href="${element.content}" x="0" y="0" width="${element.width || 100}" height="${element.height || 100}" />`;
+            }
+          }
+          
+          // Calcular a transformação para posicionar e rotacionar o elemento
+          const rotation = element.rotation || 0;
+          const transform = `translate(${element.x}, ${element.y}) rotate(${rotation}) translate(${-(element.width || 0)/2}, ${-(element.height || 0)/2})`;
+          
+          // Adicionar o elemento com sua transformação
+          svgContent += `
+            <g transform="${transform}">
+              ${elementSvgContent}
+            </g>
+          `;
+        } else if (element.type === 'image') {
+          // Imagens regulares
+          svgContent += `
+            <g transform="translate(${element.x}, ${element.y}) rotate(${element.rotation || 0}) translate(${-(element.width || 0)/2}, ${-(element.height || 0)/2})">
+              <image 
+                href="${element.content}" 
+                x="0" 
+                y="0" 
+                width="${element.width || 100}" 
+                height="${element.height || 100}"
+                preserveAspectRatio="xMidYMid meet"
+              />
+            </g>
+          `;
+        }
+      });
+      
+      // Fechar a tag SVG
+      svgContent += '</svg>';
+      
+      // Criar o arquivo para download
+      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `unitees-design-${Date.now()}.svg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "SVG Exportado!",
+        description: "Seu design foi salvo como SVG vetorial de máxima qualidade"
+      });
+    } catch (error) {
+      console.error('Erro ao exportar SVG:', error);
+      toast({
+        title: "Erro na exportação",
+        description: "Não foi possível exportar o design como SVG"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  // Prevenir zoom do navegador quando o cursor estiver sobre o canvas
+  useEffect(() => {
+    const canvasElement = canvasRef.current;
+    if (!canvasElement) return;
+
+    const preventBrowserZoom = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    };
+
+    canvasElement.addEventListener('wheel', preventBrowserZoom, { passive: false });
+    
+    return () => {
+      canvasElement.removeEventListener('wheel', preventBrowserZoom);
+    };
+  }, []);
+
+  // Adicionar estilos globais para o editor
+  useEffect(() => {
+    // Adicionar estilo para prevenir zoom no navegador para toda a área do editor
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .editor-scrollbar::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      .editor-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      .editor-scrollbar::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 5px;
+      }
+      .editor-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+      .editor-wrapper * {
+        touch-action: none;
+      }
+      @media (pointer: fine) {
+        .editor-wrapper .canvas-zoom-controls {
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+        .editor-wrapper:hover .canvas-zoom-controls {
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+  
+  return (
+    <div className="flex flex-col h-screen editor-wrapper">
+      <Header />
+      <Toaster />
+      
+      {/* Input para importação de arquivos JSON */}
+      <input 
+        type="file"
+        accept=".json"
+        ref={importInputRef}
+        className="hidden"
+        onChange={importDesignFromJSON}
+      />
+      
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Barra superior */}
+        <div className="bg-white border-b px-4 py-2 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2">
+            <Link href="/products" className="text-slate-500 hover:text-slate-700 flex items-center">
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Voltar</span>
+          </Link>
+            <h1 className="text-lg sm:text-xl font-bold ml-2 sm:ml-4">Editor de Camisetas</h1>
+        </div>
+        
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="zoom-controls hidden sm:flex items-center space-x-1 bg-slate-100 rounded-md" ref={zoomControlsRef}>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="h-8 px-2"
+                onClick={zoomOut}
+              >
+                <ChevronLeft className="h-3 w-3" />
+              </Button>
+              <div className="relative group">
+                <span className="text-sm font-medium px-1 cursor-pointer" onClick={() => zoomTo(100)}>
+                  {formatZoomLevel(zoom)}
+                </span>
+                <div className="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-white shadow-md rounded p-1 z-50">
+                  <div className="flex flex-col gap-1">
+                    {zoomLevels.map(level => (
+                      <Button 
+                        key={level} 
+                        variant={zoom === level ? "default" : "ghost"} 
+                        size="sm" 
+                        className="text-xs"
+                        onClick={() => zoomTo(level)}
+                      >
+                        {formatZoomLevel(level)}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2"
+                onClick={zoomIn}
+              >
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </div>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="h-8 hidden sm:flex"
+              onClick={() => zoomTo(100)}
+            >
+              <ZoomIn className="h-3 w-3 mr-1" />
+              <span className="hidden md:inline">100%</span>
+            </Button>
+            
+            <div className="h-5 border-l border-slate-300 mx-1 hidden sm:block"></div>
+            
+            <Button 
+              variant="default" 
+              size="sm"
+              className="h-8"
+              onClick={saveDesign}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                  <span className="hidden sm:inline">Processando...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="h-3 w-3 mr-1" />
+                  <span className="hidden sm:inline">Exportar</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+        
+        {/* Área principal - Editor */}
+        <div className="flex-1 flex overflow-hidden editor-main-container">
+          {/* Painel Esquerdo */}
+          <div className={`bg-white border-r shadow-sm panel-transition editor-scrollbar ${leftPanelCollapsed ? 'w-0 sm:w-10' : 'w-full sm:w-[280px]'} ${leftPanelCollapsed ? 'absolute sm:relative h-full z-50' : ''}`}>
+            {leftPanelCollapsed ? (
+              <div className="h-full flex flex-col hidden sm:flex">
+                <Button variant="ghost" className="w-10 h-10 p-0" onClick={() => setLeftPanelCollapsed(false)}>
+                  <PanelRight className="h-4 w-4" />
+                </Button>
+                <div className="flex-1 flex flex-col items-center py-4 gap-4">
+                  <Button variant={activeTab === "texto" ? "secondary" : "ghost"} size="icon" className="w-8 h-8" onClick={() => {setActiveTab("texto"); setLeftPanelCollapsed(false);}}>
+                    <TextIcon className="h-4 w-4" />
+                  </Button>
+                  <Button variant={activeTab === "imagem" ? "secondary" : "ghost"} size="icon" className="w-8 h-8" onClick={() => {setActiveTab("imagem"); setLeftPanelCollapsed(false);}}>
+                    <ImageIcon className="h-4 w-4" />
+                  </Button>
+                  <Button variant={activeTab === "mockups" ? "secondary" : "ghost"} size="icon" className="w-8 h-8" onClick={() => {setActiveTab("mockups"); setLeftPanelCollapsed(false);}}>
+                    <Layers className="h-4 w-4" />
+                  </Button>
+                  <Button variant={activeTab === "cores" ? "secondary" : "ghost"} size="icon" className="w-8 h-8" onClick={() => {setActiveTab("cores"); setLeftPanelCollapsed(false);}}>
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between border-b p-2">
+                  <h3 className="font-medium">Ferramentas</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8" 
+                    onClick={() => setLeftPanelCollapsed(true)}
+                  >
+                    <PanelLeft className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+                  <TabsList className="mx-2 mt-2 grid grid-cols-4">
+                    <TabsTrigger value="texto" className="text-xs py-1 px-1">
+                      <TextIcon className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Texto</span>
+                </TabsTrigger>
+                    <TabsTrigger value="imagem" className="text-xs py-1 px-1">
+                      <ImageIcon className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Imagens</span>
+                </TabsTrigger>
+                    <TabsTrigger value="mockups" className="text-xs py-1 px-1">
+                      <Layers className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Mockups</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="cores" className="text-xs py-1 px-1">
+                      <LayoutGrid className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Cores</span>
+                </TabsTrigger>
+              </TabsList>
+              
+                  <div className="flex-1 overflow-y-auto p-3">
+                    <TabsContent value="texto" className="m-0 h-full space-y-4">
+                      <div className="space-y-3">
+                        <Button 
+                          variant="outline" 
+                          className="w-full flex items-center justify-center text-sm h-9 border-dashed"
+                          onClick={addTextToCanvas}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Adicionar texto
+                        </Button>
+                        
+                        <div>
+                          <Label htmlFor="text-input" className="text-xs">Texto</Label>
+                          <div className="flex space-x-2 mt-1">
+                        <input
+                          id="text-input"
+                          type="text"
+                          value={text}
+                          onChange={(e) => setText(e.target.value)}
+                              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                        />
+                          </div>
+                      </div>
+                    </div>
+                      
+                      {selectedElement && canvasElements.find(el => el.id === selectedElement)?.type === "text" && (
+                        <div className="space-y-3 pt-2 border-t">
+                          <h3 className="font-medium text-sm">Estilo de texto</h3>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-xs">Estilo</Label>
+                        <div className="flex space-x-1">
+                          <Button
+                            variant={isBold ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              setIsBold(!isBold)
+                              if (selectedElement) {
+                                updateSelectedElement({ isBold: !isBold })
+                              }
+                            }}
+                                  className="flex-1 font-bold h-8"
+                          >
+                            B
+                          </Button>
+                          <Button
+                            variant={isItalic ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              setIsItalic(!isItalic)
+                              if (selectedElement) {
+                                updateSelectedElement({ isItalic: !isItalic })
+                              }
+                            }}
+                                  className="flex-1 italic h-8"
+                          >
+                            I
+                          </Button>
+                          <Button
+                            variant={isUnderline ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              setIsUnderline(!isUnderline)
+                              if (selectedElement) {
+                                updateSelectedElement({ isUnderline: !isUnderline })
+                              }
+                            }}
+                                  className="flex-1 underline h-8"
+                          >
+                            U
+                          </Button>
+                        </div>
+                      </div>
+                    
+                            <div className="space-y-1">
+                              <Label className="text-xs">Alinhamento</Label>
+                        <div className="flex space-x-1">
+                          <Button
+                            variant={align === "left" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              setAlign("left")
+                              if (selectedElement) {
+                                updateSelectedElement({ align: "left" })
+                              }
+                            }}
+                                  className="flex-1 h-8"
+                          >
+                                  <AlignLeft className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant={align === "center" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              setAlign("center")
+                              if (selectedElement) {
+                                updateSelectedElement({ align: "center" })
+                              }
+                            }}
+                                  className="flex-1 h-8"
+                          >
+                                  <AlignCenter className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant={align === "right" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              setAlign("right")
+                              if (selectedElement) {
+                                updateSelectedElement({ align: "right" })
+                              }
+                            }}
+                                  className="flex-1 h-8"
+                          >
+                                  <AlignRight className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  
+                          <div className="space-y-1">
+                            <div className="flex justify-between">
+                              <Label htmlFor="font-size" className="text-xs">Tamanho: {fontSize}px</Label>
+                            </div>
+                      <Slider
+                        id="font-size"
+                        min={8}
+                        max={72}
+                        step={1}
+                        value={[fontSize]}
+                        onValueChange={(value) => {
+                          setFontSize(value[0])
+                          if (selectedElement) {
+                            updateSelectedElement({ fontSize: value[0] })
+                          }
+                        }}
+                              className="py-1"
+                      />
+                    </div>
+                  
+                    <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <Label htmlFor="font-family" className="text-xs">Fonte</Label>
+                        <select
+                          id="font-family"
+                          value={fontFamily}
+                          onChange={(e) => {
+                            setFontFamily(e.target.value)
+                            if (selectedElement) {
+                              updateSelectedElement({ fontFamily: e.target.value })
+                            }
+                          }}
+                                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                        >
+                          {availableFonts.map((font) => (
+                            <option key={font.value} value={font.value}>
+                              {font.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                            <div className="space-y-1">
+                              <Label htmlFor="font-color" className="text-xs">Cor</Label>
+                        <div className="flex">
+                          <input
+                            id="font-color"
+                            type="color"
+                                  className="h-9 w-9 rounded-md border border-input"
+                            value={fontColor}
+                            onChange={(e) => {
+                              setFontColor(e.target.value)
+                              if (selectedElement) {
+                                updateSelectedElement({ fontColor: e.target.value })
+                              }
+                            }}
+                          />
+                          <input
+                            type="text"
+                                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background ml-2"
+                            value={fontColor}
+                            onChange={(e) => {
+                              setFontColor(e.target.value)
+                              if (selectedElement) {
+                                updateSelectedElement({ fontColor: e.target.value })
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                        </div>
+                      )}
+                    </TabsContent>
+                    
+                    <TabsContent value="imagem" className="m-0 space-y-4">
+                      <div className="space-y-3">
+                        <input 
+                          type="file" 
+                          ref={fileInputRef}
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={handleImageUpload}
+                        />
+                        <Button 
+                          variant="outline" 
+                          className="w-full flex items-center justify-center text-sm h-9 border-dashed"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Carregar imagem
+                        </Button>
+                        
+                        <div className="space-y-2 border-t pt-3">
+                          <h3 className="font-medium text-sm">Imagens Recomendadas</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                            {[1, 2, 3, 4].map((num) => (
+                          <div 
+                            key={num} 
+                            className="border rounded-md aspect-square bg-slate-50 flex items-center justify-center cursor-pointer hover:border-blue-500 transition-all"
+                                onClick={() => fileInputRef.current?.click()}
+                          >
+                            <img 
+                              src={`/images/editor/img-${num}.svg`} 
+                              alt={`Design ${num}`} 
+                              className="w-3/4 h-3/4 object-contain opacity-70"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                      
+                      {selectedElement && canvasElements.find(el => el.id === selectedElement)?.type === "image" && (
+                        <div className="space-y-3 pt-2 border-t">
+                          <h3 className="font-medium text-sm">Editar imagem</h3>
+                          
+                          <div className="space-y-1">
+                            <div className="flex justify-between">
+                              <Label className="text-xs">Tamanho</Label>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <Label htmlFor="image-width" className="text-xs">Largura</Label>
+                                <input
+                                  id="image-width"
+                                  type="number"
+                                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                                  value={canvasElements.find(el => el.id === selectedElement)?.width || 100}
+                                  onChange={(e) => {
+                                    const newWidth = parseInt(e.target.value);
+                                    if (newWidth > 0) {
+                                      updateSelectedElement({ width: newWidth });
+                                    }
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="image-height" className="text-xs">Altura</Label>
+                                <input
+                                  id="image-height"
+                                  type="number"
+                                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                                  value={canvasElements.find(el => el.id === selectedElement)?.height || 100}
+                                  onChange={(e) => {
+                                    const newHeight = parseInt(e.target.value);
+                                    if (newHeight > 0) {
+                                      updateSelectedElement({ height: newHeight });
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <Label className="text-xs">Rotação</Label>
+                            <div className="flex items-center gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8"
+                                onClick={() => handleRotate(selectedElement)}
+                              >
+                                <RotateCw className="h-3 w-3 mr-1" />
+                                Girar 15°
+                              </Button>
+                              <input
+                                type="number"
+                                className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                                value={canvasElements.find(el => el.id === selectedElement)?.rotation || 0}
+                                onChange={(e) => {
+                                  const newRotation = parseInt(e.target.value) % 360;
+                                  updateSelectedElement({ rotation: newRotation });
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                </TabsContent>
+                
+                    <TabsContent value="mockups" className="m-0 space-y-4">
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Modelo de Camiseta</Label>
+                          <select
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                            value={selectedMockup.id}
+                            onChange={(e) => {
+                              const mockup = availableMockups.find(m => m.id === e.target.value);
+                              if (mockup) {
+                                setSelectedMockup(mockup);
+                                setCurrentView(mockup.viewOptions[0]);
+                              }
+                            }}
+                          >
+                            {availableMockups.map((mockup) => (
+                              <option key={mockup.id} value={mockup.id}>
+                                {mockup.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <Label className="text-xs">Visualização</Label>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedMockup.viewOptions.map((view) => (
+                              <Button
+                                key={view}
+                                variant={currentView === view ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentView(view)}
+                                className="flex-1 capitalize h-8 text-xs"
+                              >
+                                {view}
+                              </Button>
+                            ))}
+                          </div>
+                          
+                          {/* Add EPS info here */}
+                          <div className="mt-2 text-xs text-blue-600 flex items-center cursor-pointer" onClick={handleEpsSupport}>
+                            <InfoIcon className="h-3 w-3 mr-1" />
+                            <span>Este mockup possui versão vetorial (EPS)</span>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1 pt-2 border-t">
+                          <h3 className="font-medium text-sm mb-2">Modelos Disponíveis</h3>
+                          <div className="grid grid-cols-2 gap-2">
+                            {availableMockups.map((mockup) => (
+                              <div 
+                                key={mockup.id}
+                                className={`border rounded-md overflow-hidden cursor-pointer transition-all ${
+                                  selectedMockup.id === mockup.id ? 'ring-2 ring-blue-600' : 'hover:border-blue-300'
+                                }`}
+                                onClick={() => {
+                                  setSelectedMockup(mockup);
+                                  setCurrentView(mockup.viewOptions[0]);
+                                }}
+                              >
+                                <div className="aspect-square bg-gray-50 relative overflow-hidden">
+                                  <SafeImage
+                                    src={mockup.path}
+                                    alt={mockup.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="p-1 text-xs font-medium truncate text-center">{mockup.name}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="cores" className="m-0 space-y-4">
+                      <div className="space-y-3">
+                    <div>
+                          <Label className="text-xs">Cor da Camiseta</Label>
+                          <div className="grid grid-cols-4 gap-2 mt-1">
+                        {availableColors.map((color) => (
+                          <div 
+                            key={color.value} 
+                            className={`w-full aspect-square rounded-md cursor-pointer flex items-center justify-center ${
+                              productColor.value === color.value 
+                                ? 'ring-2 ring-blue-600 ring-offset-2' 
+                                : 'border'
+                            }`}
+                            style={{ backgroundColor: color.value }}
+                            onClick={() => setProductColor(color)}
+                          >
+                            {productColor.value === color.value && (
+                              <div 
+                                className="h-3 w-3 rounded-full" 
+                                style={{ backgroundColor: color.textColor }}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                        
+                        <div className="pt-2 border-t">
+                          <Label className="text-xs">Paleta de Cores</Label>
+                          <div className="grid grid-cols-8 gap-1 mt-1">
+                            {['#FF5252', '#FF4081', '#E040FB', '#7C4DFF', '#536DFE', '#448AFF', '#40C4FF', '#18FFFF', 
+                              '#64FFDA', '#69F0AE', '#B2FF59', '#EEFF41', '#FFFF00', '#FFD740', '#FFAB40', '#FF6E40'].map((color) => (
+                              <div 
+                                key={color} 
+                                className="w-full aspect-square rounded-md cursor-pointer border"
+                                style={{ backgroundColor: color }}
+                                onClick={() => {
+                                  if (selectedElement) {
+                                    const element = canvasElements.find(el => el.id === selectedElement);
+                                    if (element && element.type === "text") {
+                                      setFontColor(color);
+                                      updateSelectedElement({ fontColor: color });
+                                    }
+                                  }
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                  </div>
+                </TabsContent>
+              </div>
+            </Tabs>
+              </div>
+            )}
+          </div>
+          
+          {/* Área central - Canvas de edição */}
+          <div 
+            className="flex-1 relative bg-[#f0f0f0] overflow-auto flex items-center justify-center editor-scrollbar"
+            onWheel={handleZoomWheel}
+            onMouseDown={handleCanvasPanStart}
+            onMouseMove={handleCanvasPanMove}
+            onMouseUp={handleCanvasPanEnd}
+            onMouseLeave={handleCanvasPanEnd}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{ 
+              cursor: isPanning ? 'grabbing' : zoom > 100 ? 'grab' : 'default',
+              touchAction: 'none' // Importante para evitar comportamentos padrão em dispositivos touch
+            }}
+            ref={canvasRef}
+          >
+            {renderZoomHelp()}
+            
+            {/* Controles de zoom fixos na tela */}
+            <div className="absolute bottom-4 left-4 bg-white shadow-md rounded-lg p-1 z-40 flex items-center space-x-1 canvas-zoom-controls">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={zoomOut}
+                disabled={zoom <= 25}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              
+              <div className="px-2 py-1 text-xs min-w-[52px] text-center">
+                {formatZoomLevel(zoom)}
+              </div>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={zoomIn}
+                disabled={zoom >= 400}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 ml-1" 
+                onClick={resetCanvasPosition}
+                title="Resetar zoom e posição"
+              >
+                <Maximize2 className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="absolute inset-0 grid place-items-center">
+              <div className="checker-pattern w-full h-full absolute top-0 left-0 opacity-50"></div>
+              
+              <div 
+                className="relative canvas-area" 
+                style={{ 
+                  transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoom / 100})`, 
+                  transformOrigin: `${zoomCenter.x * 100}% ${zoomCenter.y * 100}%`,
+                  transition: isPanning ? 'none' : 'transform 0.1s ease-out',
+                  willChange: 'transform' // Otimização para melhorar performance
+                }}
+              >
+                {/* Mockup da camiseta */}
+                <div
+                  id="design-canvas-area"
+                  className="w-[300px] sm:w-[500px] h-[400px] sm:h-[600px] relative bg-white shadow-lg"
+                >
+                  {/* Imagem do mockup */}
+                  <div className="absolute inset-0 overflow-hidden flex items-center justify-center">
+                    <SafeImage
+                      src={selectedMockup.path}
+                      alt={`${selectedMockup.name} - ${currentView}`}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                
+                  {/* Área de trabalho (dentro da camiseta) */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div
+                      className="w-[180px] sm:w-[300px] h-[240px] sm:h-[400px] relative"
+                      onMouseMove={(e) => {
+                        if (isDragging) handleCanvasMouseMove(e);
+                        if (isResizing) handleResizeMove(e);
+                      }}
+                      onMouseUp={() => {
+                        handleCanvasMouseUp();
+                        handleResizeEnd();
+                      }}
+                      onMouseLeave={() => {
+                        handleCanvasMouseUp();
+                        handleResizeEnd();
+                      }}
+                      onTouchMove={(e) => {
+                        if (isDragging || isResizing) {
+                          // Convert touch events to mouse events
+                          const touch = e.touches[0];
+                          const mouseEvent = {
+                            clientX: touch.clientX,
+                            clientY: touch.clientY,
+                            preventDefault: () => e.preventDefault()
+                          } as unknown as React.MouseEvent;
+                          
+                          if (isDragging) handleCanvasMouseMove(mouseEvent);
+                          if (isResizing) handleResizeMove(mouseEvent);
+                        }
+                      }}
+                      onTouchEnd={() => {
+                        handleCanvasMouseUp();
+                        handleResizeEnd();
+                      }}
+                    >
+                      {/* Elementos do canvas */}
+                      {canvasElements.map((element) => {
+                        if (element.type === "text") {
+                          return (
+                            <div
+                              key={element.id}
+                              className={`absolute cursor-move p-1 ${
+                                selectedElement === element.id
+                                  ? "ring-2 ring-blue-500"
+                                  : ""
+                              }`}
+                              style={{
+                                left: element.x,
+                                top: element.y,
+                                transform: `translate(-50%, -50%) rotate(${element.rotation || 0}deg)`,
+                                textAlign: element.align,
+                                fontFamily: element.fontFamily,
+                                fontSize: `${element.fontSize}px`,
+                                color: element.fontColor,
+                                fontWeight: element.isBold ? "bold" : "normal",
+                                fontStyle: element.isItalic ? "italic" : "normal",
+                                textDecoration: element.isUnderline ? "underline" : "none",
+                                  zIndex: element.zIndex || 0,
+                              }}
+                              onMouseDown={(e) => handleCanvasMouseDown(e, element.id)}
+                            >
+                              {element.content}
+                              
+                              {selectedElement === element.id && (
+                                  <>
+                                    <div 
+                                      className="absolute top-0 right-0 w-5 h-5 bg-blue-500 rounded-full cursor-pointer flex items-center justify-center shadow-sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRotate(element.id);
+                                      }}
+                                    >
+                                      <RotateCw className="h-3 w-3 text-white" />
+                                    </div>
+                                <div 
+                                  className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 flex items-center bg-white rounded-full shadow-sm p-1"
+                                >
+                                  <Move className="h-3 w-3 text-slate-500 mr-1" />
+                                  <span className="text-[10px] text-slate-700">Arrastar</span>
+                                </div>
+                                  </>
+                              )}
+                            </div>
+                            );
+                          } else if (element.type === "image") {
+                            // Renderizar imagem
+                            return (
+                              <div
+                                key={element.id}
+                                className={`absolute cursor-move ${
+                                  selectedElement === element.id
+                                    ? "ring-2 ring-blue-500"
+                                    : ""
+                                }`}
+                                style={{
+                                  left: element.x,
+                                  top: element.y,
+                                  transform: `translate(-50%, -50%) rotate(${element.rotation || 0}deg)`,
+                                  zIndex: element.zIndex || 0,
+                                }}
+                                onMouseDown={(e) => handleCanvasMouseDown(e, element.id)}
+                              >
+                                {element.isSVG ? (
+                                  <SVGRenderer
+                                    src={element.content}
+                                    width={element.width || 100}
+                                    height={element.height || 100}
+                                    className="object-contain"
+                                    style={{
+                                      pointerEvents: 'none',
+                                    }}
+                                  />
+                                ) : (
+                                  <img 
+                                    src={element.content} 
+                                    alt="Elemento de imagem"
+                                    className="object-contain"
+                                    style={{
+                                      width: element.width ? `${element.width}px` : 'auto',
+                                      height: element.height ? `${element.height}px` : 'auto',
+                                      imageRendering: 'auto',
+                                    }}
+                                  />
+                                )}
+                                
+                                {selectedElement === element.id && (
+                                  <>
+                                    <div 
+                                      className="absolute top-0 right-0 w-5 h-5 bg-blue-500 rounded-full cursor-pointer flex items-center justify-center shadow-sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRotate(element.id);
+                                      }}
+                                    >
+                                      <RotateCw className="h-3 w-3 text-white" />
+                                    </div>
+                                    <div 
+                                      className="absolute bottom-0 right-0 w-5 h-5 bg-blue-500 rounded-full cursor-se-resize flex items-center justify-center shadow-sm"
+                                      onMouseDown={(e) => handleResizeStart(e, element.id)}
+                                    >
+                                      <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7 1L1 7M7 7H1V1" stroke="white" strokeWidth="2" />
+                                      </svg>
+                                    </div>
+                                    <div 
+                                      className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 flex items-center bg-white rounded-full shadow-sm p-1"
+                                    >
+                                      <Move className="h-3 w-3 text-slate-500 mr-1" />
+                                      <span className="text-[10px] text-slate-700">Arrastar</span>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          }
+                          
+                          return null;
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Painel Direito */}
+          <div className={`bg-white border-l shadow-sm panel-transition editor-scrollbar ${rightPanelCollapsed ? 'w-0 sm:w-10' : 'w-full sm:w-[280px]'} ${rightPanelCollapsed ? 'absolute sm:relative right-0 h-full z-50' : ''}`}>
+            {rightPanelCollapsed ? (
+              <div className="h-full flex flex-col hidden sm:flex">
+                <Button variant="ghost" className="w-10 h-10 p-0" onClick={() => setRightPanelCollapsed(false)}>
+                  <PanelLeft className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between border-b p-2">
+                  <h3 className="font-medium">Meu Design</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8" 
+                    onClick={() => setRightPanelCollapsed(true)}
+                  >
+                    <PanelRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="p-3 space-y-4 overflow-y-auto flex-1">
+                  <div className="space-y-2">
+              <div className="flex flex-col space-y-2">
+                      <Button 
+                        variant="default" 
+                        onClick={saveDesign} 
+                        className="flex items-center justify-center"
+                        disabled={isSaving}
+                      >
+                        {isSaving ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Processando...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4 mr-2" />
+                            Salvar como Imagem
+                          </>
+                        )}
+                      </Button>
+                      <Button variant="outline" onClick={saveDesignToJSON}>
+                        Exportar Design
+                      </Button>
+                      <Button variant="outline" onClick={exportDesignAsSVG} disabled={isSaving}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Exportar como SVG
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => importInputRef.current?.click()}
+                        className="flex items-center justify-center"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Importar Design
+                </Button>
+                <Button variant="outline" onClick={addToCart}>
+                  Adicionar ao Carrinho
+                </Button>
+              </div>
+            </div>
+            
+            <div>
+                    <h2 className="font-semibold mb-2 text-sm">Modelo Selecionado</h2>
+              <div className="border rounded-md p-2 text-center">
+                      <SafeImage 
+                        src={selectedMockup.path} 
+                        alt={selectedMockup.name} 
+                        className="w-full h-auto object-contain max-h-32"
+                      />
+                      <p className="text-sm font-medium mt-1">{selectedMockup.name}</p>
+                      <p className="text-xs text-slate-500">Visualização: {currentView}</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                      <Label htmlFor="product-type" className="text-xs">Tipo</Label>
+                <select
+                  id="product-type"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                        value={selectedMockup.category === "feminino" ? "Feminino" : selectedMockup.category === "masculino" ? "Masculino" : "Unissex"}
+                        onChange={(e) => {
+                          // Encontrar mockups da categoria selecionada
+                          const category = e.target.value === "Feminino" 
+                            ? "feminino" 
+                            : e.target.value === "Masculino" 
+                              ? "masculino" 
+                              : "unissex";
+                          
+                          const mockupsOfCategory = availableMockups.filter(m => m.category === category);
+                          if (mockupsOfCategory.length > 0) {
+                            // Selecionar o primeiro mockup da categoria
+                            setSelectedMockup(mockupsOfCategory[0]);
+                            setCurrentView(mockupsOfCategory[0].viewOptions[0]);
+                          }
+                        }}
+                      >
+                        <option>Masculino</option>
+                        <option>Feminino</option>
+                        <option>Unissex</option>
+                </select>
+              </div>
+              
+              <div className="space-y-2">
+                      <Label htmlFor="product-size" className="text-xs">Tamanho</Label>
+                <select
+                  id="product-size"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                  defaultValue="M"
+                        onChange={(e) => {
+                          // Handler para quando o tamanho for alterado
+                          console.log("Tamanho selecionado:", e.target.value);
+                        }}
+                >
+                  <option>P</option>
+                  <option>M</option>
+                  <option>G</option>
+                  <option>GG</option>
+                </select>
+              </div>
+            </div>
+                  
+                  {selectedElement && (
+                    <div className="space-y-3 border-t pt-3">
+                      <h2 className="font-semibold text-sm">Propriedades do Elemento</h2>
+                      <div className="flex justify-between gap-2 mb-1">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1 h-8 text-xs"
+                          onClick={deleteSelectedElement}
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Excluir
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1 h-8 text-xs"
+                          onClick={() => {
+                            const element = canvasElements.find(el => el.id === selectedElement);
+                            if (element) {
+                              const newElement = {
+                                ...element, 
+                                id: `${element.type}-${Date.now()}`,
+                                x: element.x + 10,
+                                y: element.y + 10
+                              };
+                              setCanvasElements([...canvasElements, newElement]);
+                            }
+                          }}
+                        >
+                          <Copy className="h-3 w-3 mr-1" />
+                          Duplicar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+      
+      {/* Mobile-only toolbar - visible on small screens */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-2 z-50 mobile-controls">
+        <div className="flex flex-wrap justify-between items-center">
+          <Button variant="ghost" size="sm" onClick={() => setLeftPanelCollapsed(false)}>
+            <TextIcon className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setRightPanelCollapsed(false)}>
+            <ImageIcon className="h-4 w-4" />
+          </Button>
+          
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" onClick={zoomOut} className="touch-manipulation h-10 w-10 rounded-full">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-sm px-3 touch-manipulation" 
+              onClick={() => zoomTo(100)}
+            >
+              {formatZoomLevel(zoom)}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={zoomIn} className="touch-manipulation h-10 w-10 rounded-full">
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+          
+          <Button variant="ghost" size="sm" onClick={resetCanvasPosition} className="touch-manipulation h-10 w-10 rounded-full">
+            <RefreshCw className="h-5 w-5" />
+            <span className="sr-only">Resetar visualização</span>
+          </Button>
+          
+          <Button variant="ghost" size="sm" onClick={saveDesign} className="touch-manipulation h-10 w-10 rounded-full">
+            <Download className="h-5 w-5" />
+          </Button>
+        </div>
+        <div className="text-center text-xs text-slate-500 mt-1">
+          Pinça para zoom • Dois toques para centralizar
+        </div>
+      </div>
+    </div>
+  )
+}

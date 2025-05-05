@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, Brush, HandCoins, MessageSquare, Rocket, Shirt, ShoppingCart, Truck } from "lucide-react"
+import { ArrowRight, Brush, HandCoins, MessageSquare, Rocket, Shirt, ShoppingCart, Truck, Pen, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
@@ -15,14 +15,14 @@ export default function ComoFunciona() {
     {
       title: "Crie seu design",
       description: "Use nosso editor intuitivo para criar sua camiseta ou escolha entre designs prontos. Adicione textos, imagens e personalize cores.",
-      icon: <Brush className="w-12 h-12 text-blue-600" />,
+      icon: <Pen className="h-8 w-8 text-primary" />,
       imageUrl: "/placeholder.svg?height=300&width=500",
       imageAlt: "Editor de camisetas",
     },
     {
       title: "Encontre uma gráfica",
       description: "Navegue por gráficas parceiras em sua região, compare preços e avaliações para escolher a melhor opção.",
-      icon: <Shirt className="w-12 h-12 text-blue-600" />,
+      icon: <CreditCard className="h-8 w-8 text-primary" />,
       imageUrl: "/placeholder.svg?height=300&width=500",
       imageAlt: "Lista de gráficas",
     },
@@ -57,126 +57,158 @@ export default function ComoFunciona() {
   ]
 
   return (
-    <main className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <Header />
-
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">Como Funciona a Unitees</h1>
-          <p className="text-xl max-w-3xl mx-auto mb-8">
-            Transforme suas ideias em camisetas universitárias de forma simples, 
-            conectando-se diretamente com gráficas locais.
-          </p>
-        </div>
-      </section>
-
-      {/* Steps Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid gap-16">
-            {steps.map((step, index) => (
-              <div key={index} className={`flex flex-col ${index % 2 === 1 ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-8`}>
-                <div className="md:w-1/2">
-                  <div className="relative w-full h-[300px] rounded-lg overflow-hidden">
-                    <Image 
-                      src={step.imageUrl} 
-                      alt={step.imageAlt}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+      
+      <main className="flex-grow">
+        {/* Hero Section */}
+        <section className="bg-primary text-primary-foreground py-20">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">Como Funciona a Unitees</h1>
+            <p className="text-xl max-w-3xl mx-auto">
+              Transforme suas ideias em camisetas universitárias de forma simples, conectando-se
+              diretamente com gráficas locais.
+            </p>
+          </div>
+        </section>
+        
+        {/* Steps Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-3 gap-8">
+              {/* Step 1 */}
+              <div className="bg-card rounded-lg p-8 shadow-md border flex flex-col items-center text-center">
+                <div className="bg-primary/10 p-4 rounded-full mb-4">
+                  <Pen className="h-8 w-8 text-primary" />
                 </div>
-                <div className="md:w-1/2">
-                  <div className="flex items-center mb-4">
-                    {step.icon}
-                    <div className="ml-4 bg-blue-100 text-blue-600 font-semibold px-3 py-1 rounded-full text-sm">
-                      Passo {index + 1}
-                    </div>
-                  </div>
-                  <h2 className="text-3xl font-bold mb-4">{step.title}</h2>
-                  <p className="text-gray-600 text-lg mb-6">{step.description}</p>
-                  {index === 0 && (
-                    <Button asChild>
-                      <Link href="/editor">Comece a criar agora</Link>
-                    </Button>
-                  )}
-                  {index === 1 && (
-                    <Button asChild>
-                      <Link href="/explorar">Explorar gráficas</Link>
-                    </Button>
-                  )}
-                </div>
+                <h3 className="text-xl font-semibold mb-2">Passo 1: Crie seu design</h3>
+                <p className="text-muted-foreground">
+                  Use nosso editor intuitivo para criar sua camiseta ou escolha entre designs
+                  prontos. Adicione textos, imagens e personalize cores.
+                </p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Perguntas Frequentes</h2>
-          
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-3">Quanto custa criar uma camiseta?</h3>
-              <p className="text-gray-600">
-                Os preços variam de acordo com a gráfica escolhida, quantidade de camisetas e 
-                especificações do design. Nossa plataforma permite que você compare preços e 
-                negocie diretamente com as gráficas.
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-3">Quanto tempo leva para receber?</h3>
-              <p className="text-gray-600">
-                O prazo de entrega depende da gráfica selecionada e da complexidade do pedido. 
-                Em média, os pedidos são entregues em 7 a 14 dias após a confirmação.
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-3">Posso acompanhar o status do pedido?</h3>
-              <p className="text-gray-600">
-                Sim! Você receberá atualizações em cada etapa do processo, desde a confirmação 
-                até a entrega, e pode acompanhar tudo pelo seu perfil na plataforma.
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-semibold mb-3">Como é feito o pagamento?</h3>
-              <p className="text-gray-600">
-                O pagamento é combinado diretamente com a gráfica escolhida. A maioria aceita 
-                métodos como PIX, transferência bancária ou pagamento na entrega.
-              </p>
+              
+              {/* Step 2 */}
+              <div className="bg-card rounded-lg p-8 shadow-md border flex flex-col items-center text-center">
+                <div className="bg-primary/10 p-4 rounded-full mb-4">
+                  <CreditCard className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Passo 2: Escolha uma gráfica</h3>
+                <p className="text-muted-foreground">
+                  Compare orçamentos de gráficas próximas, converse diretamente e selecione a melhor
+                  opção para sua necessidade e orçamento.
+                </p>
+              </div>
+              
+              {/* Step 3 */}
+              <div className="bg-card rounded-lg p-8 shadow-md border flex flex-col items-center text-center">
+                <div className="bg-primary/10 p-4 rounded-full mb-4">
+                  <Truck className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Passo 3: Receba seu pedido</h3>
+                <p className="text-muted-foreground">
+                  Finalize seu pedido, acompanhe o status e receba suas camisetas personalizadas
+                  diretamente no local combinado.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-blue-600 text-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Pronto para criar sua camiseta?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Em poucos passos, você terá sua camiseta universitária personalizada exatamente como imaginou.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100" asChild>
-              <Link href="/editor">Criar Minha Camiseta</Link>
-            </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" asChild>
-              <Link href="/explorar">
-                Ver Gráficas Parceiras
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+        </section>
+        
+        {/* Benefits Section */}
+        <section className="py-16 bg-muted">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12">Benefícios da Unitees</h2>
+            <div className="grid md:grid-cols-2 gap-12">
+              <div>
+                <h3 className="text-xl font-semibold mb-4">Para Estudantes</h3>
+                <ul className="space-y-4">
+                  <li className="flex items-start">
+                    <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1 flex-shrink-0">✓</div>
+                    <p>Preços diretos da gráfica sem intermediários</p>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1 flex-shrink-0">✓</div>
+                    <p>Compare orçamentos de diversas gráficas</p>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1 flex-shrink-0">✓</div>
+                    <p>Acompanhe todo o processo de produção</p>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1 flex-shrink-0">✓</div>
+                    <p>Editor simples e intuitivo</p>
+                  </li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-semibold mb-4">Para Gráficas</h3>
+                <ul className="space-y-4">
+                  <li className="flex items-start">
+                    <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1 flex-shrink-0">✓</div>
+                    <p>Acesse clientes universitários diretamente</p>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1 flex-shrink-0">✓</div>
+                    <p>Receba pedidos com especificações claras</p>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1 flex-shrink-0">✓</div>
+                    <p>Gestão simplificada de orçamentos e pedidos</p>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-1 flex-shrink-0">✓</div>
+                    <p>Crescimento do seu negócio no mercado universitário</p>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
-
+        </section>
+        
+        {/* FAQ Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12">Perguntas Frequentes</h2>
+            <div className="max-w-3xl mx-auto divide-y divide-border">
+              <div className="py-6">
+                <h3 className="text-xl font-medium mb-2">Quanto tempo leva para receber minhas camisetas?</h3>
+                <p className="text-muted-foreground">
+                  O tempo de entrega depende da gráfica escolhida e da quantidade de camisetas. Em geral, pedidos
+                  são entregues entre 7 a 14 dias úteis após a confirmação.
+                </p>
+              </div>
+              
+              <div className="py-6">
+                <h3 className="text-xl font-medium mb-2">Posso pedir amostras antes do pedido final?</h3>
+                <p className="text-muted-foreground">
+                  Sim, algumas gráficas oferecem a possibilidade de enviar uma amostra. Você pode
+                  negociar diretamente com a gráfica pelo nosso chat.
+                </p>
+              </div>
+              
+              <div className="py-6">
+                <h3 className="text-xl font-medium mb-2">Como funciona o pagamento?</h3>
+                <p className="text-muted-foreground">
+                  O pagamento é feito diretamente pela plataforma, usando cartão de crédito, débito, PIX
+                  ou boleto bancário. Garantimos a segurança da transação.
+                </p>
+              </div>
+              
+              <div className="py-6">
+                <h3 className="text-xl font-medium mb-2">Como me torno uma gráfica parceira?</h3>
+                <p className="text-muted-foreground">
+                  Registre-se como uma gráfica e preencha todas as informações necessárias. Nossa equipe
+                  fará uma verificação e, após aprovada, sua gráfica estará disponível para os estudantes.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+      
       <Footer />
-    </main>
+    </div>
   )
 }

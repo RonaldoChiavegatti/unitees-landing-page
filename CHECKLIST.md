@@ -16,7 +16,7 @@ Este documento serve como um guia de acompanhamento para o desenvolvimento do pr
 - [x] Login/Cadastro
 - [x] Perfil do Usuário
 - [x] Editor de Camisetas
-- [ ] Chat com Gráficas
+- [x] Chat com Gráficas
 
 ### 🧩 Componentes
 - [x] Header
@@ -30,15 +30,15 @@ Este documento serve como um guia de acompanhamento para o desenvolvimento do pr
 - [x] Componentes de Avaliação (Reviews)
 - [x] Formulários de Login/Cadastro
 - [x] Editor de Texto para Design
-- [ ] Uploader de Imagens
-- [ ] Widget de Chat
-- [ ] Formulário de Pagamento
+- [x] Uploader de Imagens
+- [x] Widget de Chat
+- [x] Formulário de Pagamento
 
 ### 🎨 Design e UI
 - [x] Setup de Tailwind CSS
 - [x] Implementação de shadcn/ui
 - [x] Tema personalizado (cores, fontes)
-- [ ] Modo escuro/claro
+- [x] Modo escuro/claro
 - [x] Componentes responsivos para todos tamanhos de tela
 - [x] Animações e transições
 
@@ -52,38 +52,37 @@ Este documento serve como um guia de acompanhamento para o desenvolvimento do pr
 - [x] Autenticação simulada
 - [x] Perfis de usuário simulados
 
-## 🔮 Backend com Firebase (Fase Futura)
+## 🔥 Backend com Firebase (Fase Atual)
 
 ### 🔐 Autenticação
-- [ ] Configuração do Firebase no projeto
-- [ ] Autenticação por Email/Senha
-- [ ] Autenticação com Google
-- [ ] Recuperação de senha
-- [ ] Verificação de email
-- [ ] Middleware de proteção de rotas
+- [x] Configuração do Firebase no projeto
+- [x] Autenticação por Email/Senha
+- [x] Autenticação com Google
+- [x] Recuperação de senha
+- [x] Verificação de email
+- [x] Configuração para Next.js App Router (diretivas "use client")
 
 ### 🗃️ Banco de Dados (Firestore)
-- [ ] Modelagem das coleções
-- [ ] Configuração de regras de segurança
-- [ ] Implementação de hooks CRUD para Users
-- [ ] Implementação de hooks CRUD para Designs
-- [ ] Implementação de hooks CRUD para Printers
-- [ ] Implementação de hooks CRUD para Orders
-- [ ] Implementação de hooks CRUD para Chats
+- [x] Modelagem das coleções
+- [x] Configuração de regras de segurança
+- [x] Implementação de hooks CRUD para Users
+- [x] Implementação de hooks CRUD para Designs
+- [x] Implementação de hooks CRUD para Printers (via Users)
+- [x] Implementação de hooks CRUD para Orders
+- [x] Implementação de hooks CRUD para Chats
 
 ### 📦 Armazenamento
-- [ ] Configuração do Firebase Storage
-- [ ] Upload de imagens para o editor
-- [ ] Upload de fotos de perfil
-- [ ] Gerenciamento de assets de design
-- [ ] Otimização de imagens
+- [x] Configuração do Firebase Storage
+- [x] Upload de imagens para o editor
+- [x] Upload de fotos de perfil
+- [x] Gerenciamento de assets de design
+- [x] Otimização de imagens
 
-### ⚡ Cloud Functions
-- [ ] Configuração do ambiente de Functions
-- [ ] Notificações por email
-- [ ] Processamento de pedidos
-- [ ] Geração de PDFs para orçamentos
-- [ ] Webhooks para integrações (opcional)
+### 🔄 Processamento de Backend
+- [x] Implementação de API Routes do Next.js para processamento de pedidos
+- [x] Integração com serviço de email (Resend)
+- [x] Processamento de imagens no cliente antes do upload
+- [ ] Implementação de webhooks para integrações (se necessário)
 
 ## 🚀 Implantação e Infraestrutura
 
@@ -101,15 +100,16 @@ Este documento serve como um guia de acompanhamento para o desenvolvimento do pr
 ## 🔍 Testes e Qualidade
 
 ### 🧪 Testes
-- [ ] Configuração do Jest
-- [ ] Testes unitários para componentes críticos
+- [x] Configuração do Jest
+- [x] Testes unitários para componentes críticos
+- [x] Testes de API
 - [ ] Testes de integração
 - [ ] Testes E2E com Cypress
 
 ### 🔒 Segurança
 - [ ] Auditoria de segurança
-- [ ] Implementação de CSP
-- [ ] Validação de entradas com Zod
+- [x] Implementação de CSP
+- [x] Validação de entradas com Zod
 - [ ] Sanitização de dados
 
 ## 📱 Melhorias Futuras
@@ -146,9 +146,9 @@ Este documento serve como um guia de acompanhamento para o desenvolvimento do pr
 - [x] Sistema de autenticação simulado
 - [x] Perfis de usuário (estudante e gráfica)
 - [x] Editor de camisetas personalizadas
-- [ ] MVP Frontend (Completo)
-- [ ] Integração com Firebase
-- [ ] Testes e Qualidade
+- [x] MVP Frontend (Completo)
+- [⏳] Integração com Firebase
+- [⏳] Testes e Qualidade
 - [ ] Lançamento v1.0
 
 ## 🗓️ Marcos
@@ -162,8 +162,9 @@ Este documento serve como um guia de acompanhamento para o desenvolvimento do pr
 | Sistema de Autenticação | ✅ Completo | - |
 | Perfis de Usuário | ✅ Completo | - |
 | Editor de Camisetas | ✅ Completo | - |
-| Integração Firebase | 🔄 Planejado | - |
-| MVP | ⏳ Em andamento | - |
+| Chat e Uploader | ✅ Completo | - |
+| Integração Firebase | ⏳ Em andamento | - |
+| MVP | ✅ Completo | - |
 | Versão 1.0 | 🔄 Planejado | - |
 
 ---

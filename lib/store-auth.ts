@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { User, UserRole, StudentUser, PrinterUser, AuthSession, LoginData, SignupData } from './types'
 
 // Dados fictícios de usuários para simulação
@@ -49,6 +49,13 @@ interface AuthStore extends AuthSession {
   logout: () => void;
   updateProfile: (userData: Partial<User>) => Promise<User | null>;
 }
+
+// Função para limpar o localStorage (uso em caso de problemas)
+const clearAuthStorage = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('unitees-mock-auth-storage');
+  }
+};
 
 // Criação da loja Zustand para autenticação
 export const useAuthStore = create<AuthStore>()(
@@ -147,6 +154,9 @@ export const useAuthStore = create<AuthStore>()(
           user: null,
           isAuthenticated: false
         })
+        
+        // Limpar storage para evitar problemas
+        clearAuthStorage()
       },
       
       // Atualização de perfil simulada
@@ -177,7 +187,29 @@ export const useAuthStore = create<AuthStore>()(
       }
     }),
     {
-      name: 'unitees-auth-storage',
+      name: 'unitees-mock-auth-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ 
+        user: state.user,
+        isAuthenticated: state.isAuthenticated 
+      }),
+      version: 1,
+      migrate: (persistedState, version) => {
+        // Se o estado persistido não tiver a estrutura esperada, retorna um estado limpo
+        if (!persistedState || typeof persistedState !== 'object') {
+          return {
+            user: null,
+            isAuthenticated: false
+          };
+        }
+        
+        // Se a versão for diferente, podemos fazer migrações específicas
+        // Neste caso, para simplificar, apenas garantimos que temos a estrutura básica
+        return {
+          user: persistedState.user || null,
+          isAuthenticated: !!persistedState.isAuthenticated
+        };
+      }
     },
   ),
 ) 
